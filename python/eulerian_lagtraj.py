@@ -158,7 +158,7 @@ def create_microhhforcing(dict):
         for i in range(1,z_new.size): 
             z_new[i]=z_new[i-1]+dz
             if z_new[i]>4000:
-                dz=dz+int(round(0.3*dz,0));
+                dz=dz+int(round(0.2*dz,0));
         print(z_new[299])
         z_end_ind=np.nonzero((z_new>dict['z_top']))[0][0]    
         z=z_new[0:z_end_ind+1]
@@ -222,7 +222,8 @@ def create_microhhforcing(dict):
     cp  = 1005.
     Lv  = 2.5e6
     Rd  = 287.
-    tau = 21600;
+    tau = int(dict['nudge_time']*3600);
+    print(tau)
 
     ######################## Radiation Calculation and NC input ##################################
 
@@ -382,7 +383,9 @@ def create_microhhforcing(dict):
 
     ug = ugeo; vg = vgeo;
     p_sbot = pres[:,0];
-    nudge_factor[:,:]=1./tau
+    nudge_height = dict['nudge_height']
+    z_nudge_ind=np.nonzero((z>nudge_height))[0][0]
+    nudge_factor[:,z_nudge_ind:-1]=1./tau
 
     for n in range(0,time.size):
         sat_r = mpcalc.saturation_mixing_ratio(p_sbot[n] * units.pascal , sst[n]* units.kelvin)
@@ -618,7 +621,7 @@ def create_microhhforcing(dict):
             ini['land_surface']['c_veg'] = 0.99
             ini['radiation']['emis_sfc'] = 0.97
             ini['land_surface']['rs_veg_min'] = 180
-        elif dict['domain']=='SGP':
+        elif dict['domain']=='SGP' or dict['domain']=='SGP_eclipse':
             lai=high_veg_cover[0]*high_veg_lai[0]+low_veg_cover[0]*low_veg_lai[0]
             ini['land_surface']['lai'] = lai
             ini['land_surface']['gD'] = 0
@@ -749,6 +752,16 @@ def generate_forcing(cliargs):
     else:
         dict['z_top'] = 12000.
 
+    if 'nudge_time' in cliargs.keys():
+        dict['nudge_time'] = float(cliargs['nudge_time'])
+    else:
+        dict['nudge_time'] = 3
+
+    if 'nudge_height' in cliargs.keys():
+        dict['nudge_height'] = float(cliargs['nudge_height'])
+    else:
+        dict['nudge_height'] = 4000.
+
     create_domain(dict)
     download_domain(dict)
     create_trajectory(dict)
@@ -771,6 +784,8 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end_date', help='end date')
     parser.add_argument('-fg', '--fine_grid', help='use fine grid')
     parser.add_argument('-zt', '--z_top', help='domain top')
+    parser.add_argument('-nh', '--nudge_height', help='Start height for nudging')
+    parser.add_argument('-nt', '--nudge_time', help='Start height for nudging')
 
     cliargs = vars(parser.parse_args())
     generate_forcing(cliargs)
