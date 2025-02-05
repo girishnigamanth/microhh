@@ -607,9 +607,10 @@ def create_microhhforcing(dict):
         ini['boundary']['sbcbot'] = 'dirichlet'
         ini['land_surface']['swhomogeneous'] = True
         ini['boundary']['swconstantz0'] = True
+        ini['time']['datetime_utc']=str(dict['start_date'].date())+' 00:00:00'
         
         if dict['domain']=='SEUS':
-            evergreen=0.5;
+            evergreen=1;
             gD_hv=evergreen*0.0003+(1-evergreen)*0.0013;
             #rs_highveg=evergreen*500+(1-evergreen)*240;
             lai=high_veg_cover[0]*high_veg_lai[0]+low_veg_cover[0]*low_veg_lai[0]
@@ -719,7 +720,7 @@ def generate_forcing(cliargs):
     if 'lon_max' not in dict.keys():
         dict['lon_max'] = np.ceil(dict['lon_origin']+half_size)
     
-    dict['datetime_origin'] = datetime.strptime(dict['datetime_origin'], '%Y-%m-%dT%H:%M')
+    
 
     if 'backward_duration' in dict.keys():
         dict['backward_duration'] = parseTimeDelta(dict['backward_duration'])
@@ -731,8 +732,10 @@ def generate_forcing(cliargs):
         dict['forward_duration'] = datetime.timedelta(hours=0)
 
     if 'start_date' in dict.keys():
+        dict['datetime_origin'] = datetime.strptime(dict['start_date'], '%Y-%m-%dT%H:%M')
         dict['start_date'] = datetime.strptime(dict['start_date'], '%Y-%m-%dT%H:%M')
     else:
+        dict['datetime_origin'] = datetime.strptime(dict['datetime_origin'], '%Y-%m-%dT%H:%M')
         dict['start_date'] = dict['datetime_origin'] - dict['backward_duration']
     
     if 'end_date' in dict.keys():
